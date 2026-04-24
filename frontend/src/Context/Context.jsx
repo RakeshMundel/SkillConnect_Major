@@ -7,7 +7,7 @@ const ContextProvider=(props)=>{
     const [all_profile,setAll_Profile]=useState([]);
 
     useEffect(()=>{
-    fetch('/allprofiles')
+    fetch('http://localhost:4000/allprofiles')
     .then((response)=>response.json())
     .then((data)=>setAll_Profile(data))
 

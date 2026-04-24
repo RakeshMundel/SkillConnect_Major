@@ -10,6 +10,8 @@ const ProPage = () => {
   const { propageId } = useParams();
   const profile = all_profile.find((e) => e.id === propageId);
 
+   console.log("all_profile:", all_profile);
+  console.log("propageId:", propageId);
   if (!profile) {
     return <div>Loading profile...</div>;
   }

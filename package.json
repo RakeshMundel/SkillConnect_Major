@@ -1,28 +1,5 @@
 {
-  "name": "skill-connect-major",
-  "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
-  "scripts": {
-    "frontend": "npm run dev -w frontend",
-    "backend": "npm run dev -w backend",
-    "dev": "npx concurrently \"npm run frontend\" \"npm run backend\"",
-    "build": "npm install && npm run build -w frontend",
-    "start": "node backend/index.js"
-  },
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.6.1",
-    "express": "^5.2.1",
-    "mongoose": "^9.0.1",
-    "multer": "^2.0.2",
-    "stripe": "^22.0.2",
     "uuidv4": "^6.2.13"
-  },
-  "devDependencies": {
-    "concurrently": "^9.1.2"
   }
 }

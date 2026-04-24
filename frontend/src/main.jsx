@@ -3,7 +3,6 @@ import './index.css'
 import App from './App.jsx'
 import ContextProvider from './Context/Context';
 import { AuthProvider } from "./Context/AuthContext";
-import 'leaflet/dist/leaflet.css';
 
 createRoot(document.getElementById('root')).render(
  <AuthProvider>

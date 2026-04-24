@@ -1,6 +1,6 @@
 import { React, useState, useContext } from 'react';
 import './ProviderForm.css';
-import upload_area from '../Assets/upload_area.svg';
+import upload_area from '../assets/upload_area.svg';
 import { AuthContext } from "../../Context/AuthContext";
 
 const ProviderForm = () => {
@@ -38,13 +38,14 @@ const ProviderForm = () => {
 
         // 1. Upload Image
         try {
-            const uploadResponse = await fetch('/upload', {
+            const uploadResponse = await fetch('http://localhost:4000/upload', {
                 method: 'POST',
                 body: formData,
             });
             responseData = await uploadResponse.json();
         } catch (error) {
             alert("Image upload failed. Check the server connection.");
+            console.error("Upload error:", error);
             return;
         }
 
@@ -52,7 +53,7 @@ const ProviderForm = () => {
         if (responseData.success) {
             profile.image = responseData.image_url;
             try {
-                const addProfileResponse = await fetch('/addprofile', {
+                const addProfileResponse = await fetch('http://localhost:4000/addprofile', {
                     method: 'POST',
                     headers: {
                         Accept: 'application/json',
@@ -64,6 +65,7 @@ const ProviderForm = () => {
                 data.success ? alert("Profile Added Successfully!") : alert("Failed to add profile.");
             } catch (error) {
                 alert("Profile submission failed. Check server.");
+                console.error("Submission error:", error);
             }
         }
     };
