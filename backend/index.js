@@ -155,8 +155,8 @@ app.post("/create-checkout-session", async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `http://localhost:5173/cancel`,
+      success_url: `${process.env.FRONTEND_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/cancel`,
     });
 
     res.json({ id: session.id, url: session.url });
@@ -267,10 +267,11 @@ app.get('/seed', async (req, res) => {
   }
 });
 
-// Serve frontend in production
-if (process.env.NODE_ENV === "production") {
+// Serve frontend in production (frontend is deployed separately as static site)
+// This code is kept for local development only
+if (process.env.NODE_ENV === "production" && process.env.SERVE_FRONTEND === "true") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
-  app.get("*", (req, res) => {
+  app.get("/*", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
   });
 }
