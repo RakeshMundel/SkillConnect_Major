@@ -1,5 +1,21 @@
 {
+  "name": "skill-connect-major",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "frontend": "npm run dev -w frontend",
+    "backend": "npm run dev -w backend",
+    "dev": "npx concurrently \"npm run frontend\" \"npm run backend\"",
+    "install:all": "npm install"
+  },
   "dependencies": {
     "uuidv4": "^6.2.13"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

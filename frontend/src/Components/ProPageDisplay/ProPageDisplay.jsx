@@ -1,6 +1,7 @@
 import React, { useContext} from 'react';
 import './ProPageDisplay.css';
 import { FaStar, FaMapMarkerAlt, FaBriefcase, FaCertificate } from 'react-icons/fa'; 
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { AuthContext } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { getOrCreateChat } from "../Chat/getOrCreateChat";
@@ -40,6 +41,27 @@ const ProPageDisplay = (props) => {
         navigate("/chat", { state: { chatId } });
     };
 
+    const handleHire = async () => {
+        try {
+            const response = await fetch('http://localhost:4000/create-checkout-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    profileId: profile.id,
+                    name: profile.name,
+                    price: profile.price || 50
+                })
+            });
+            const session = await response.json();
+            if (session.url) {
+                window.location.href = session.url; // Redirect to Stripe
+            }
+        } catch (error) {
+            console.error("Payment error:", error);
+            alert("Payment failed to initialize");
+        }
+    };
+
 
     // Helper to render rating stars
     const renderStars = (rating) => {
@@ -58,6 +80,18 @@ const ProPageDisplay = (props) => {
         }
         
         return stars;
+    };
+
+    const mapContainerStyle = {
+        width: '100%',
+        height: '300px',
+        borderRadius: '10px',
+        marginTop: '20px'
+    };
+
+    const center = {
+        lat: 28.6139, // Default to Delhi/Noida area for demo
+        lng: 77.2090
     };
      const remove_profile=async(id)=>{
     await fetch('http://localhost:4000/removeprofile',{
@@ -106,6 +140,11 @@ const callNow = () => {
                             <p>({profile.reviews || defaultProfile.reviews})</p>
                         </div>
                         
+                        {/* Price */}
+                        <div className="profiledisplay-price">
+                            <h2>${profile.price || 50} <span>/ Hiring Fee</span></h2>
+                        </div>
+                        
                         {/* Location (New Field) */}
                         <div className="profiledisplay-location">
                             
@@ -138,6 +177,14 @@ const callNow = () => {
       onClick={startChat}
     >
       Chat with Professional
+    </button>
+
+    <button
+      className="book-service-btn"
+      style={{ background: "#28a745", marginTop: "10px", color: "white" }}
+      onClick={handleHire}
+    >
+      🚀 Hire Now
     </button>
   </>
 )}
@@ -195,6 +242,23 @@ const callNow = () => {
                         </section>
                     </div>
 
+                </div>
+
+                {/* --- 3. GOOGLE MAPS SECTION --- */}
+                <div className='profiledisplay-map-section'>
+                    <h3 className='section-title-teal'>Service Location</h3>
+                    <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+                        <GoogleMap
+                            mapContainerStyle={mapContainerStyle}
+                            center={center}
+                            zoom={12}
+                        >
+                            <Marker position={center} title={profile.location} />
+                        </GoogleMap>
+                    </LoadScript>
+                    <p style={{ marginTop: '10px', color: '#666' }}>
+                        <FaMapMarkerAlt /> {profile.location || defaultProfile.location}
+                    </p>
                 </div>
             </div>
         </div>

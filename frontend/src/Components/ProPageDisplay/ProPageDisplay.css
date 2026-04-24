@@ -221,3 +221,16 @@
         flex-direction: column;
     }
 }
+
+/* Price Section */
+.profiledisplay-price h2 {
+    font-size: 28px;
+    color: #28a745; /* Success green for price */
+    margin: 10px 0;
+}
+
+.profiledisplay-price h2 span {
+    font-size: 14px;
+    color: #888;
+    font-weight: normal;
+}
