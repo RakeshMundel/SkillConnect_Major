@@ -3,7 +3,6 @@ import TrustSection from '../Components/TrustSection/TrustSection';
 import Professionals from '../Components/Professionals/Professionals';
 import Category from '../Components/Category/Category';
 const Home = () => {
-    console.log("Home rendering");
   return (
     <div className='home'>
         <TrustSection/>

@@ -14,6 +14,13 @@ const Navbar = () => {
 const sidebarRef = useRef(null);
 
 const navigate = useNavigate();
+  const [location, setLocation] = useState("");
+
+  const handleLocationSearch = (e) => {
+    if (e.key === 'Enter') {
+      navigate(`/search?query=${location}`);
+    }
+  };
 
  const handleSubmit = (e) => {
     e.preventDefault();
@@ -69,7 +76,14 @@ const navigate = useNavigate();
         {/* Location bar */}
         <div className="location-wrapper">
           <span className="material-symbols-outlined location-icon">location_on</span>
-          <input className="form-control input-btn" type="text" placeholder="Location" />
+          <input 
+            className="form-control input-btn" 
+            type="text" 
+            placeholder="Location (e.g. Noida)" 
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            onKeyDown={handleLocationSearch}
+          />
         </div>
 
         {/* Right side Icons */}
@@ -113,6 +127,11 @@ const navigate = useNavigate();
                     <Link to="/membership" className="profile-item">
                       <span className="material-symbols-outlined">receipt_long</span>
                       Membership
+                    </Link>
+
+                    <Link to="/hired" className="profile-item">
+                      <span className="material-symbols-outlined">work_history</span>
+                      Hired Professionals
                     </Link>
 
                     <Link to="/provider" className="profile-item">

@@ -25,7 +25,7 @@ const EditProfile = () => {
 
   // 🔹 FETCH EXISTING PROFILE
   useEffect(() => {
-    fetch(`http://localhost:4000/propage/${id}`)
+    fetch(`/propage/${id}`)
       .then(res => res.json())
       .then(data => {
         setProfileDetails({
@@ -59,7 +59,7 @@ const EditProfile = () => {
       const formData = new FormData();
       formData.append("profile", image);
 
-      const uploadRes = await fetch("http://localhost:4000/upload", {
+      const uploadRes = await fetch("/upload", {
         method: "POST",
         body: formData,
       });
@@ -67,7 +67,7 @@ const EditProfile = () => {
       updatedProfile.image = uploadData.image_url;
     }
 
-    await fetch(`http://localhost:4000/updateprofile/${id}`, {
+    await fetch(`/updateprofile/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

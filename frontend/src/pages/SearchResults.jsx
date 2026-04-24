@@ -11,7 +11,7 @@ const SearchResults = () => {
   useEffect(() => {
     if (!query) return;
 
-    fetch(`http://localhost:4000/search?query=${query}`)
+    fetch(`/search?query=${query}`)
       .then(res => res.json())
       .then(data => setResults(data));
   }, [query]);

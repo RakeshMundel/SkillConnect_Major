@@ -7,6 +7,7 @@ const multer=require("multer");
 const path=require("path");
 const cors=require("cors");
 const Profile=require("./models/profile.js");
+const Hiring = require("./models/hiring.js");
 
 app.use(express.json());
 app.use(cors());
@@ -52,9 +53,7 @@ app.post('/addprofile',async (req,res)=>{
     owner: req.body.owner,
     phone:req.body.phone
   });
-  console.log(profile);
   await profile.save();
-  console.log("Saved");
   res.json({
     success:true,
     name:req.body.name,
@@ -64,7 +63,6 @@ app.post('/addprofile',async (req,res)=>{
 
 app.post('/removeprofile', async (req, res) => {
   await Profile.findOneAndDelete({ id: req.body.id });
-  console.log("Removed");
   res.json({
     success: true,
     name: req.body.name
@@ -74,7 +72,6 @@ app.post('/removeprofile', async (req, res) => {
 //Creating API for getting all products
 app.get('/allprofiles',async(req,res)=>{
     let profiles=await Profile.find({});
-    console.log("All Profiles Fetched");
     res.send(profiles);
 })
 
@@ -83,7 +80,6 @@ app.get('/allprofiles',async(req,res)=>{
 /*app.get('/newcollection',async(req,res)=>{
     let products=await Product.find({});
     let newcollection=products.slice(1).slice(-8);
-    console.log ("new Collection fetched");
     res.send(newcollection);
 })
 */
@@ -91,12 +87,11 @@ app.get('/allprofiles',async(req,res)=>{
 app.get('/topprofessional',async(req,res)=>{
     let profiles=await Profile.find({});
     let top_professional=profiles.slice(0,9);
-    console.log ("Top Professional fetched");
-    res.send(profiles);
+    res.send(top_professional);
 })
 
 app.get("/search", async (req, res) => {
-  const query = req.query.query;   // ✅ THIS LINE WAS MISSING
+  const query = req.query.query;
 
   if (!query) {
     return res.json([]);
@@ -134,11 +129,19 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 // Payment Session Creation
 app.post("/create-checkout-session", async (req, res) => {
-  const { profileId, name, price } = req.body;
+  const { profileId, name, price, userId } = req.body;
 
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
+      metadata: {
+        profileId,
+        userId,
+        professionalName: name,
+        price,
+        scheduledDate: req.body.scheduledDate,
+        scheduledTime: req.body.scheduledTime
+      },
       line_items: [
         {
           price_data: {
@@ -152,13 +155,61 @@ app.post("/create-checkout-session", async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:5173/success`,
+      success_url: `http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `http://localhost:5173/cancel`,
     });
 
     res.json({ id: session.id, url: session.url });
   } catch (error) {
-    console.error("Stripe Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Retrieve session details
+app.get("/retrieve-session/:sessionId", async (req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
+    res.json(session);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Endpoint to record hiring after success
+app.post("/record-hiring", async (req, res) => {
+  const { userId, profileId, professionalName, amount, scheduledDate, scheduledTime } = req.body;
+  try {
+    const newHiring = new Hiring({
+      userId,
+      profileId,
+      professionalName,
+      amount,
+      scheduledDate,
+      scheduledTime
+    });
+    await newHiring.save();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Endpoint to get hired professionals for a user
+app.get("/hired-professionals/:userId", async (req, res) => {
+  try {
+    const hired = await Hiring.find({ userId: req.params.userId });
+    res.json(hired);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Endpoint to check if a professional is already hired by a user
+app.get("/check-hiring/:userId/:profileId", async (req, res) => {
+  try {
+    const hired = await Hiring.findOne({ userId: req.params.userId, profileId: req.params.profileId });
+    res.json({ isHired: !!hired });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
@@ -216,11 +267,16 @@ app.get('/seed', async (req, res) => {
   }
 });
 
+// Serve frontend in production
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
+  });
+}
+
 app.listen(port,(error)=>{
-    if(!error){
-        console.log("Server is running on port "+port);
-    }
-    else{
-        console.log("Error:"+error);
+    if(error){
+        // No log as requested
     }
 });

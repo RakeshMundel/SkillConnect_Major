@@ -10,7 +10,8 @@
     "frontend": "npm run dev -w frontend",
     "backend": "npm run dev -w backend",
     "dev": "npx concurrently \"npm run frontend\" \"npm run backend\"",
-    "install:all": "npm install"
+    "build": "npm run build -w frontend",
+    "start": "node backend/index.js"
   },
   "dependencies": {
     "uuidv4": "^6.2.13"

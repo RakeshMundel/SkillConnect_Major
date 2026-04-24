@@ -7,8 +7,6 @@ import {Context } from '../Context/Context';
 
 const ProCategory = (props) => {
   const {all_profile} = useContext(Context);
-  console.log("Category from props:", props.category);
-console.log("Skill titles:", all_profile.map(i => i.skills));
 
 
   return (

@@ -1,14 +1,18 @@
 .navbar{
     display:flex;
     flex-wrap: wrap;
-   box-shadow:0 1px 3px -2px black;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     justify-content:space-around;
     align-items:center;
     position:sticky;
     top:0;
-     z-index: 999;
-  background-color: white;
-  padding:5px 0 !important;
+    z-index: 1000;
+    padding:8px 0 !important;
+    transition: all 0.3s ease;
 }
 .nav-logo{
     display:flex;
