@@ -18,6 +18,7 @@ import Success from './pages/Success';
 import Cancel from './pages/Cancel';
 import HiredProfessionals from './pages/HiredProfessionals';
 import SocialProof from './Components/SocialProof/SocialProof';
+import Chatbot from './Components/ChatBot/ChatBot';
 
 import menSpa from './Components/Assets/menSpa.png'
 import womenSpa from './Components/Assets/womenSpa.png'
@@ -77,6 +78,7 @@ function App() {
         <Navbar/>
         <SocialProof />
         <AnimatedRoutes />
+        <Chatbot />
         <Footer/>
       </BrowserRouter>
     </div>

@@ -283,10 +283,10 @@ const rankProfiles = (profiles) =>
 
 const Chatbot = () => {
   const { all_profile } = useContext(Context);
-  const profiles = useMemo(
-    () => (all_profile?.length ? all_profile : fallbackProfiles),
-    [all_profile]
-  );
+  const profiles = useMemo(() => {
+    console.log("Chatbot loaded with profiles:", all_profile?.length);
+    return (all_profile && all_profile.length > 0) ? all_profile : fallbackProfiles;
+  }, [all_profile]);
 
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
