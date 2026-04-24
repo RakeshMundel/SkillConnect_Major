@@ -1,9 +1,31 @@
 import React, { useContext} from 'react';
 import './ProPageDisplay.css';
-import { FaStar, FaMapMarkerAlt, FaBriefcase, FaCertificate } from 'react-icons/fa'; 
+import { FaStar, FaMapMarkerAlt, FaBriefcase, FaCertificate, FaExternalLinkAlt } from 'react-icons/fa'; 
 import { AuthContext } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { getOrCreateChat } from "../Chat/getOrCreateChat";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+
+// Fix for default Leaflet marker icon not showing in React
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Component to recenter map when coordinates change
+function RecenterMap({ center }) {
+    const map = useMap();
+    React.useEffect(() => {
+        map.setView(center);
+    }, [center, map]);
+    return null;
+}
 
 
 const ProPageDisplay = (props) => {
@@ -40,6 +62,51 @@ const ProPageDisplay = (props) => {
         navigate("/chat", { state: { chatId } });
     };
 
+    const [isHired, setIsHired] = React.useState(false);
+    const [scheduledDate, setScheduledDate] = React.useState("");
+    const [scheduledTime, setScheduledTime] = React.useState("");
+
+    React.useEffect(() => {
+        const checkHiringStatus = async () => {
+            if (currentUser && profile.id) {
+                try {
+                    const response = await fetch(`/check-hiring/${currentUser.uid}/${profile.id}`);
+                    const data = await response.json();
+                    setIsHired(data.isHired);
+                } catch (error) {
+                }
+            }
+        };
+        checkHiringStatus();
+    }, [currentUser, profile.id]);
+
+    const handleHire = async () => {
+        if (!currentUser) {
+            navigate("/login");
+            return;
+        }
+        try {
+            const response = await fetch('/create-checkout-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    profileId: profile.id,
+                    name: profile.name,
+                    price: profile.price || 50,
+                    userId: currentUser.uid,
+                    scheduledDate,
+                    scheduledTime
+                })
+            });
+            const session = await response.json();
+            if (session.url) {
+                window.location.href = session.url; // Redirect to Stripe
+            }
+        } catch (error) {
+            alert("Payment failed to initialize");
+        }
+    };
+
 
     // Helper to render rating stars
     const renderStars = (rating) => {
@@ -59,8 +126,26 @@ const ProPageDisplay = (props) => {
         
         return stars;
     };
+
+    const [mapCenter, setMapCenter] = React.useState([28.6139, 77.2090]); // Default Delhi
+
+    React.useEffect(() => {
+        const geocodeAddress = async () => {
+            const address = profile.location || defaultProfile.location;
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+                }
+            } catch (error) {
+                // Ignore geocoding errors, stay at default
+            }
+        };
+        geocodeAddress();
+    }, [profile.location]);
      const remove_profile=async(id)=>{
-    await fetch('http://localhost:4000/removeprofile',{
+    await fetch('/removeprofile',{
       method:'POST',
       headers:{
         Accept:'application/json',
@@ -106,6 +191,11 @@ const callNow = () => {
                             <p>({profile.reviews || defaultProfile.reviews})</p>
                         </div>
                         
+                        {/* Price */}
+                        <div className="profiledisplay-price">
+                            <h2>${profile.price || 50} <span>/ Hiring Fee</span></h2>
+                        </div>
+                        
                         {/* Location (New Field) */}
                         <div className="profiledisplay-location">
                             
@@ -127,9 +217,9 @@ const callNow = () => {
   </>
 ) : (
   <>
-    <button className="book-service-btn" onClick={callNow}>
-      Call Now
-    </button>
+    <button className="book-service-btn" onClick={() => window.location.href = "tel:+919876543210"}>
+  📞 Call Now
+  </button>
 
 
     <button
@@ -138,6 +228,50 @@ const callNow = () => {
       onClick={startChat}
     >
       Chat with Professional
+    </button>
+
+    {!isHired && (
+      <div className="hiring-schedule" style={{ marginBottom: '15px' }}>
+        <p style={{ fontWeight: 'bold', fontSize: '14px', marginBottom: '8px' }}>Select Preferred Date & Time:</p>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input 
+            type="date" 
+            className="form-control" 
+            style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc', flex: 1 }}
+            value={scheduledDate}
+            onChange={(e) => setScheduledDate(e.target.value)}
+            min={new Date().toISOString().split("T")[0]} // Prevent past dates
+          />
+          <input 
+            type="time" 
+            className="form-control" 
+            style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc', flex: 1 }}
+            value={scheduledTime}
+            onChange={(e) => setScheduledTime(e.target.value)}
+          />
+        </div>
+      </div>
+    )}
+
+    <button
+      className="book-service-btn"
+      style={{ 
+        background: isHired ? "#6c757d" : (!scheduledDate || !scheduledTime ? "#999" : "#28a745"), 
+        marginTop: "10px", 
+        color: "white",
+        cursor: (isHired || (!scheduledDate && !isHired) || (!scheduledTime && !isHired)) ? "not-allowed" : "pointer" 
+      }}
+      onClick={() => {
+        if (isHired) return;
+        if (!scheduledDate || !scheduledTime) {
+            alert("Please select a date and time first!");
+            return;
+        }
+        handleHire();
+      }}
+      disabled={isHired}
+    >
+      {isHired ? "✅ Already Hired" : "🚀 Hire Now"}
     </button>
   </>
 )}
@@ -195,6 +329,36 @@ const callNow = () => {
                         </section>
                     </div>
 
+                </div>
+
+                {/* --- 3. INTERACTIVE MAP SECTION --- */}
+                <div className='profiledisplay-map-section'>
+                    <h3 className='section-title-teal'>Service Location</h3>
+                    <div style={{ height: '300px', width: '100%', marginTop: '20px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #ddd' }}>
+                        <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            <Marker position={mapCenter}>
+                                <Popup>
+                                    {profile.name} <br /> {profile.location || defaultProfile.location}
+                                </Popup>
+                            </Marker>
+                            <RecenterMap center={mapCenter} />
+                        </MapContainer>
+                    </div>
+                    <p style={{ marginTop: '10px', fontSize: '14px', color: '#666', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <FaMapMarkerAlt color="#0d6efd" /> {profile.location || defaultProfile.location}
+                        <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(profile.location || defaultProfile.location)}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ marginLeft: 'auto', color: '#0d6efd', textDecoration: 'none' }}
+                        >
+                            Open in Google Maps <FaExternalLinkAlt size={12} />
+                        </a>
+                    </p>
                 </div>
             </div>
         </div>
