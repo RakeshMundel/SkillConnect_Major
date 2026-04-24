@@ -39,11 +39,29 @@ function App() {
 
         <Route path='/men' element={<ProCategory banner={menSpa} category="men salon"/>}/>
         <Route path='/women' element={<ProCategory banner={womenSpa}category="women salon"/>}/>
-        <Route path='/painter' element={<ProCategory banner={painting}category="painter"/>}/>
-        <Route path='/pestcontrol' element={<ProCategory banner={PestControl}category="pestControl"/>}/>
-        <Route path='/waterpurifier' element={<ProCategory banner={waterpurifier}category="waterpurifier"/>}/>
-        <Route path='/electrician' element={<ProCategory banner={electrician}category="electrician"/>}/>
-        <Route path='/ac' element={<ProCategory banner={AC}category="AC"/>}/>
+        <Route path='/painter' element={<ProCategory banner={painting} category="painter"/>}/>
+        <Route
+          path='/pestcontrol'
+          element={<ProCategory banner={PestControl} category={["pestcontrol", "pest control"]} />}
+        />
+        <Route
+          path='/home-cleaning'
+          element={<ProCategory banner={PestControl} category={["home cleaning", "cleaning"]} />}
+        />
+        <Route
+          path='/plumber'
+          element={<ProCategory banner={waterpurifier} category="plumber" />}
+        />
+        <Route
+          path='/carpenter'
+          element={<ProCategory banner={painting} category="carpenter" />}
+        />
+        <Route
+          path='/waterpurifier'
+          element={<ProCategory banner={waterpurifier} category={["water purifier", "waterpurifier"]} />}
+        />
+        <Route path='/electrician' element={<ProCategory banner={electrician} category="electrician"/>}/>
+        <Route path='/ac' element={<ProCategory banner={AC} category={["ac repair", "ac"]} />}/>
 
       
 

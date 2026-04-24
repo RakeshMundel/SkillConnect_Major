@@ -1,24 +1,20 @@
 .navbar{
     display:flex;
-    flex-wrap: wrap;
-   box-shadow:0 1px 3px -2px black;
-    justify-content:space-around;
+    flex-wrap: nowrap;
+   box-shadow:0 1px 8px rgba(0, 0, 0, 0.08);
+    justify-content:space-between;
     align-items:center;
     position:sticky;
     top:0;
      z-index: 999;
   background-color: white;
-  padding:5px 0 !important;
+  padding:6px 24px !important;
 }
 .nav-logo{
     display:flex;
     align-items:center;
     gap:1px;
-}
-.nav-logo p{
-    color:black;
-    font-size:38px;
-    font-weight:600;
+    min-width: 160px;
 }
 
 .nav-login-signup{
@@ -172,7 +168,8 @@
 }
 .location-wrapper {
   position: relative;
-  width: 300px;    /* you can change this */
+  width: 390px;
+  max-width: 100%;
 }
 
 .location-icon {
@@ -186,8 +183,10 @@
 
 .input-btn {
   padding-left: 40px !important; /* Leaves space for icon */
-  border-radius: 10px;
-  height: 40px;
+  border-radius: 8px;
+  height: 30px;
+  border: 1px solid #dbdbdb !important;
+  font-size: 14px;
 }
 
 
@@ -234,4 +233,29 @@
 .logout-btn {
   color: red;
   cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .navbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .location-wrapper {
+    width: calc(50% - 12px);
+  }
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    padding: 10px 12px !important;
+  }
+
+  .nav-logo {
+    min-width: auto;
+  }
+
+  .location-wrapper {
+    width: 100%;
+  }
 }

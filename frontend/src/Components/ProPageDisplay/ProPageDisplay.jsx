@@ -127,9 +127,9 @@ const callNow = () => {
   </>
 ) : (
   <>
-    <button className="book-service-btn" onClick={() => window.location.href = "tel:+919876543210"}>
-  📞 Call Now
-  </button>
+    <button className="book-service-btn" onClick={callNow}>
+      Call Now
+    </button>
 
 
     <button

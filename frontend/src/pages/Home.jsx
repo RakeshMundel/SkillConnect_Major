@@ -1,15 +1,16 @@
 import React from 'react'
+import './Home.css'
 import TrustSection from '../Components/TrustSection/TrustSection';
 import Professionals from '../Components/Professionals/Professionals';
 import Category from '../Components/Category/Category';
 const Home = () => {
-    console.log("Home rendering");
   return (
     <div className='home'>
+      <div className="home-shell">
         <TrustSection/>
         <Category/>
         <Professionals/>
-        <hr style={{ background: "#e0e0e0", height: "2px", border: "none" }} />
+      </div>
     </div>
   )
 }
