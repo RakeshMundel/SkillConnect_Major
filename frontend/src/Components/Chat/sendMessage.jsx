@@ -25,5 +25,6 @@ export const sendMessage = async (chatId, text, userId) => {
       lastMessageAt: serverTimestamp(),
     });
   } catch (err) {
+    console.error("❌ Send message failed:", err);
   }
 };

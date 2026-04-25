@@ -10,6 +10,7 @@ const LoginSignup = () => {
       const result = await googleSignIn();
       const user = result.user;
 
+      console.log("User:", user);
 
       // Save user in localStorage
       localStorage.setItem("auth-token", user.accessToken);
@@ -20,6 +21,7 @@ const LoginSignup = () => {
       // Redirect
       window.location.replace("/");
     } catch (error) {
+      console.error("Google Sign-in Error:", error);
     }
   };
 
