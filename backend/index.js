@@ -51,12 +51,22 @@ app.get("/",(req,res)=>{
     res.send("Express App is running");
 })
 
-const storage=multer.diskStorage({
-    destination:'./upload/images',
-    filename:(req,file,cb)=>{
-        return cb(null,`${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`)
-    }
-})
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'skillconnect_profiles',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  },
+});
 
 const upload=multer({storage:storage})
 
@@ -66,7 +76,7 @@ app.use('/images',express.static('upload/images'))
 app.post("/upload",upload.single('profile'),(req,res)=>{
     res.json({
         success:1,
-        image_url:`/images/${req.file.filename}`
+        image_url:req.file.path
     })
 })
 
