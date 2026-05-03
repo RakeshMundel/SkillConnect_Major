@@ -215,6 +215,89 @@
     gap: 20px;
 }
 
+/* Earnings Dashboard */
+.earnings-dashboard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white;
+    padding: 25px 40px;
+    border-radius: 20px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+}
+
+.earnings-card {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+.earnings-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.earnings-icon {
+    font-size: 45px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    border-radius: 12px;
+}
+
+.earnings-text p {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.earnings-text h3 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.earnings-badge {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 8px 15px;
+    border-radius: 25px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.payout-btn {
+    background: white;
+    color: #1e3a8a;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payout-btn:hover {
+    background: #f0f7ff;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .earnings-dashboard {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+        padding: 20px;
+    }
+    .earnings-card {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
 .info-box {
     flex: 1;
     padding: 15px;

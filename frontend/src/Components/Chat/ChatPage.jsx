@@ -9,8 +9,14 @@ const ChatPage = () => {
 
   // 👇 Receive chatId when navigating from profile
   useEffect(() => {
-    if (location.state?.chatId) {
-      setActiveChat(location.state.chatId);
+    const stateId = location.state?.chatId;
+    const localId = localStorage.getItem('activeChatId');
+    
+    if (stateId) {
+      setActiveChat(stateId);
+      localStorage.setItem('activeChatId', stateId);
+    } else if (localId) {
+      setActiveChat(localId);
     }
   }, [location.state]);
 

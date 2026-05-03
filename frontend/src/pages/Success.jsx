@@ -7,7 +7,9 @@ import { BASE_URL } from '../config';
 const Success = () => {
     const [searchParams] = useSearchParams();
     const sessionId = searchParams.get('session_id');
+    const paymentType = searchParams.get('type');
     const [isMembership, setIsMembership] = React.useState(false);
+    const [isBalance, setIsBalance] = React.useState(false);
 
     useEffect(() => {
         // Trigger Confetti
@@ -21,6 +23,21 @@ const Success = () => {
         const confirmHiring = async () => {
             if (sessionId) {
                 try {
+                    // Check if it's a balance payment
+                    if (paymentType === 'balance') {
+                        setIsBalance(true);
+                        const sessionRes = await fetch(`${BASE_URL}/retrieve-session/${sessionId}`);
+                        const session = await sessionRes.json();
+                        if (session && session.metadata) {
+                            await fetch(`${BASE_URL}/mark-fully-paid`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ hiringId: session.metadata.hiringId })
+                            });
+                        }
+                        return;
+                    }
+
                     // 1. Get session details
                     const sessionRes = await fetch(`${BASE_URL}/retrieve-session/${sessionId}`);
                     const session = await sessionRes.json();
@@ -59,7 +76,10 @@ const Success = () => {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 userId: session.metadata.userId,
+                                userName: session.metadata.userName || "Client",
                                 profileId: session.metadata.profileId,
+                                professionalId: session.metadata.professionalId,
+                                professionalPhone: session.metadata.professionalPhone,
                                 professionalName: session.metadata.professionalName,
                                 amount: session.metadata.price,
                                 scheduledDate: session.metadata.scheduledDate,
@@ -78,17 +98,19 @@ const Success = () => {
         <div style={{ textAlign: 'center', padding: '100px 20px', minHeight: '60vh' }}>
             <FaCheckCircle style={{ fontSize: '80px', color: '#28a745', marginBottom: '20px' }} />
             <h1 style={{ fontSize: '36px', marginBottom: '10px' }}>
-                {isMembership ? 'Welcome to SkillConnect Pro!' : 'Payment Successful!'}
+                {isMembership ? 'Welcome to SkillConnect Pro!' : (isBalance ? 'Project Fully Paid!' : 'Payment Successful!')}
             </h1>
             <p style={{ fontSize: '18px', color: '#666', marginBottom: '30px', maxWidth: '600px', margin: '0 auto 30px' }}>
                 {isMembership 
                     ? 'Your account has been upgraded to Pro. You now have access to exclusive benefits, unlimited chats, and the priority badge!' 
-                    : 'Thank you for hiring our professional. You can now see them in your "Hired Professionals" list.'
+                    : (isBalance 
+                        ? 'The remaining balance has been paid successfully. The professional has been notified of the full payment.'
+                        : 'Thank you for hiring our professional. You can now see them in your "Hired Professionals" list.')
                 }
             </p>
             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
                 <Link 
-                    to={isMembership ? "/profile" : "/hired"} 
+                    to="/" 
                     style={{ 
                         padding: '12px 30px', 
                         background: '#2ea6aa', 
@@ -98,7 +120,7 @@ const Success = () => {
                         fontWeight: 'bold'
                     }}
                 >
-                    {isMembership ? 'View Your Profile' : 'View Hired List'}
+                    {isMembership ? 'View Your Profile' : (isBalance ? 'Hire More Professionals' : 'Hire More Professionals')}
                 </Link>
                 <Link 
                     to="/" 

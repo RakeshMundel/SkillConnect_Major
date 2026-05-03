@@ -145,6 +145,28 @@ const YourProfilePage = () => {
                 </button>
             </div>
 
+            {/* --- EARNINGS DASHBOARD --- */}
+            <div className='earnings-dashboard'>
+                <div className='earnings-card'>
+                    <div className='earnings-info'>
+                        <span className="material-symbols-outlined earnings-icon">payments</span>
+                        <div className="earnings-text">
+                            <p>Total Revenue</p>
+                            <h3>${profile.earnings || 0}</h3>
+                        </div>
+                    </div>
+                    <div className='earnings-badge'>
+                        <span className="material-symbols-outlined">trending_up</span>
+                        +15% this month
+                    </div>
+                </div>
+                <div className='earnings-actions'>
+                    <button className='payout-btn' onClick={() => alert("Payout system coming soon!")}>
+                        Withdraw Earnings
+                    </button>
+                </div>
+            </div>
+
             <div className='profile-card-edit'>
                 
                 {/* --- 1. TOP HEADER SECTION (Image and Info) --- */}

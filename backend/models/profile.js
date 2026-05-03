@@ -81,11 +81,16 @@ certificate: {
     type: Number,
     default: 50 // Default hiring fee $50
   },
-  membership: {
-    type: String,
-    enum: ["Basic", "Pro"],
-    default: "Basic"
-  },
+    membership: {
+        type: String,
+        enum: ["Basic", "Pro"],
+        default: "Basic"
+    },
+    earnings: {
+        type: Number,
+        default: 0
+    }
+,
 
   createdAt: {
     type: Date,

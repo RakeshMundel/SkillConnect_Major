@@ -8,6 +8,7 @@ const path=require("path");
 const cors=require("cors");
 const Profile=require("./models/profile.js");
 const Hiring = require("./models/hiring.js");
+const Notification = require("./models/notification.js");
 const https = require("https");
 
 // Keep-Alive logic for Render (pings every 10 minutes)
@@ -219,11 +220,23 @@ app.post("/myprofile/upsert", async (req, res) => {
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-// Payment Session Creation
+// Endpoint to get top professionals for homepage
+app.get("/topprofessional", async (req, res) => {
+  try {
+    const profiles = await Profile.find({ rating: { $gte: 4 } }).limit(10);
+    res.json(profiles);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Payment Session Creation (Initial 1/3)
 app.post("/create-checkout-session", async (req, res) => {
-  const { profileId, name, price, userId } = req.body;
-  // Use the origin from the request to support both local and production
+  const { profileId, name, price, userId, professionalId, userName, scheduledDate, scheduledTime } = req.body;
   const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  // Calculate 1/3 of the price for the initial hiring payment
+  const initialPayment = Math.ceil(price / 3);
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -231,10 +244,14 @@ app.post("/create-checkout-session", async (req, res) => {
       metadata: {
         profileId,
         userId,
+        userName: userName || "Client",
+        professionalId: professionalId || "",
+        professionalPhone: req.body.phone || "",
         professionalName: name,
-        price,
-        scheduledDate: req.body.scheduledDate,
-        scheduledTime: req.body.scheduledTime
+        price: initialPayment,
+        fullPrice: price,
+        scheduledDate,
+        scheduledTime
       },
       line_items: [
         {
@@ -242,14 +259,53 @@ app.post("/create-checkout-session", async (req, res) => {
             currency: "usd",
             product_data: {
               name: `Hiring ${name}`,
+              description: `Initial 1/3 Deposit for ${scheduledDate} at ${scheduledTime}`,
             },
-            unit_amount: price * 100, // Stripe uses cents
+            unit_amount: initialPayment * 100, // Stripe uses cents
           },
           quantity: 1,
         },
       ],
       mode: "payment",
-      success_url: `${origin}/#/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/#/success?session_id={CHECKOUT_SESSION_ID}&type=hire`,
+      cancel_url: `${origin}/#/cancel`,
+    });
+
+    res.json({ id: session.id, url: session.url });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create Balance Payment Session (Remaining 2/3)
+app.post("/create-balance-checkout-session", async (req, res) => {
+  const { hiringId, professionalName, fullPrice } = req.body;
+  const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  // Calculate remaining 2/3
+  const balanceAmount = fullPrice - Math.ceil(fullPrice / 3);
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      metadata: {
+        hiringId,
+        paymentType: 'balance_payment'
+      },
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `Final Balance for ${professionalName}`,
+            },
+            unit_amount: balanceAmount * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${origin}/#/success?session_id={CHECKOUT_SESSION_ID}&type=balance`,
       cancel_url: `${origin}/#/cancel`,
     });
 
@@ -271,17 +327,28 @@ app.get("/retrieve-session/:sessionId", async (req, res) => {
 
 // Endpoint to record hiring after success
 app.post("/record-hiring", async (req, res) => {
-  const { userId, profileId, professionalName, amount, scheduledDate, scheduledTime } = req.body;
+  const { userId, profileId, professionalId, professionalPhone, professionalName, amount, scheduledDate, scheduledTime } = req.body;
   try {
     const newHiring = new Hiring({
       userId,
       profileId,
+      professionalId: professionalId || "",
+      professionalPhone: professionalPhone || "",
       professionalName,
       amount,
       scheduledDate,
       scheduledTime
     });
     await newHiring.save();
+
+    // Increment professional earnings
+    if (professionalId) {
+      await Profile.findOneAndUpdate(
+        { owner: professionalId },
+        { $inc: { earnings: amount } }
+      );
+    }
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -293,6 +360,41 @@ app.get("/hired-professionals/:userId", async (req, res) => {
   try {
     const hired = await Hiring.find({ userId: req.params.userId });
     res.json(hired);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET bookings for a professional
+app.get("/my-bookings/:professionalId", async (req, res) => {
+  try {
+    const bookings = await Hiring.find({ professionalId: req.params.professionalId });
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Endpoint to mark task as complete (Professional side)
+app.post("/complete-task", async (req, res) => {
+  const { hiringId, completionImage } = req.body;
+  try {
+    const hiring = await Hiring.findById(hiringId);
+    if (!hiring) return res.status(404).json({ error: "Hiring not found" });
+
+    await Hiring.findByIdAndUpdate(hiringId, { completionImage, completedAt: new Date() });
+
+    // Create notification for client
+    const newNotification = new Notification({
+      userId: hiring.userId,
+      senderId: hiring.professionalId,
+      title: "Work Completed! ✅",
+      message: `${hiring.professionalName} has finished the work. You can now view the proof and pay the final balance.`,
+      link: "/hired"
+    });
+    await newNotification.save();
+
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -363,12 +465,59 @@ app.get('/seed', async (req, res) => {
 
 // Serve frontend in production (frontend is deployed separately as static site)
 // This code is kept for local development only
+// Serve frontend in production (frontend is deployed separately as static site)
 if (process.env.NODE_ENV === "production" && process.env.SERVE_FRONTEND === "true") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
   app.get("/*", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
   });
 }
+
+// Endpoint to mark hiring as fully paid
+app.post("/mark-fully-paid", async (req, res) => {
+  const { hiringId } = req.body;
+  try {
+    const hiring = await Hiring.findById(hiringId);
+    if (!hiring) return res.status(404).json({ error: "Hiring not found" });
+
+    // Mark as paid
+    await Hiring.findByIdAndUpdate(hiringId, { status: "fully_paid" });
+
+    // Calculate balance (2/3 of total)
+    // hiring.amount is 1/3, so balance is amount * 2
+    const balance = hiring.amount * 2;
+
+    await Profile.findOneAndUpdate(
+      { owner: hiring.professionalId },
+      { $inc: { earnings: balance } }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Endpoint to get notifications for a user
+app.get("/notifications/:userId", async (req, res) => {
+  try {
+    const notifications = await Notification.find({ userId: req.params.userId }).sort({ createdAt: -1 }).limit(20);
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Endpoint to mark notification as read
+app.post("/notifications/read", async (req, res) => {
+  const { notificationId } = req.body;
+  try {
+    await Notification.findByIdAndUpdate(notificationId, { read: true });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 app.listen(port,(error)=>{
     if(error){

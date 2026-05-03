@@ -40,14 +40,55 @@ const navigate = useNavigate();
           if (data && !data.error) {
             setUserProfile(data);
           }
+          
+          // Initial fetch of notifications
+          fetchNotifications(user.uid);
         } catch (err) {
           console.error("Navbar profile fetch failed", err);
         }
       }
     });
 
-    return () => unsubscribe();
+    // Polling for notifications every 30 seconds
+    const notifyInterval = setInterval(() => {
+      if (auth.currentUser) {
+        fetchNotifications(auth.currentUser.uid);
+      }
+    }, 30000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(notifyInterval);
+    };
   }, []);
+
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const fetchNotifications = async (uid) => {
+    try {
+      const { BASE_URL } = await import('../../config');
+      const res = await fetch(`${BASE_URL}/notifications/${uid}`);
+      const data = await res.json();
+      setNotifications(data);
+    } catch (err) {
+      console.error("Failed to fetch notifications", err);
+    }
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      const { BASE_URL } = await import('../../config');
+      await fetch(`${BASE_URL}/notifications/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationId: id })
+      });
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
     // Close sidebar if clicked outside
   useEffect(() => {
@@ -109,12 +150,57 @@ const navigate = useNavigate();
           </>
         ) : (
           <>
-          <span 
-                className="material-symbols-outlined profile-icon"
-                onClick={() => setOpenSidebar(!openSidebar)}
+          <div className="nav-icons-group">
+            <div className="notification-container">
+              <span 
+                className="material-symbols-outlined notification-bell"
+                onClick={() => setShowNotifications(!showNotifications)}
               >
-                account_circle
+                notifications
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <span className="notification-badge">
+                    {notifications.filter(n => !n.read).length}
+                  </span>
+                )}
               </span>
+
+              {showNotifications && (
+                <div className="notifications-dropdown">
+                  <div className="notifications-header">
+                    <h3>Notifications</h3>
+                  </div>
+                  <div className="notifications-list">
+                    {notifications.length === 0 ? (
+                      <p className="no-notifications">No notifications yet</p>
+                    ) : (
+                      notifications.map(n => (
+                        <div 
+                          key={n._id} 
+                          className={`notification-item ${n.read ? 'read' : 'unread'}`}
+                          onClick={() => {
+                            markAsRead(n._id);
+                            navigate(n.link);
+                            setShowNotifications(false);
+                          }}
+                        >
+                          <div className="notify-title">{n.title}</div>
+                          <div className="notify-msg">{n.message}</div>
+                          <div className="notify-time">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <span 
+              className="material-symbols-outlined profile-icon"
+              onClick={() => setOpenSidebar(!openSidebar)}
+            >
+              account_circle
+            </span>
+          </div>
 
               {/* Sidebar Menu */}
               {openSidebar && (
@@ -157,6 +243,11 @@ const navigate = useNavigate();
                     <Link to="/hired" className="profile-item">
                       <span className="material-symbols-outlined">work_history</span>
                       Hired Professionals
+                    </Link>
+
+                    <Link to="/my-bookings" className="profile-item">
+                      <span className="material-symbols-outlined">assignment_ind</span>
+                      My Work Bookings
                     </Link>
 
                     <Link to="/provider" className="profile-item">

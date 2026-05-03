@@ -16,6 +16,7 @@ const Cancel = lazy(() => import('./pages/Cancel'));
 const HiredProfessionals = lazy(() => import('./pages/HiredProfessionals'));
 const Membership = lazy(() => import('./pages/Membership'));
 const AccountSettings = lazy(() => import('./pages/AccountSettings'));
+const MyBookings = lazy(() => import('./pages/MyBookings'));
 
 // Components
 import ProviderForm from './Components/ProviderForm/ProviderForm';
@@ -81,6 +82,7 @@ function AnimatedRoutes() {
             <Route path="/hired" element={<HiredProfessionals />} />
             <Route path="/membership" element={<Membership />} />
             <Route path="/settings" element={<AccountSettings />} />
+            <Route path="/my-bookings" element={<MyBookings />} />
           </Routes>
         </motion.div>
       </Suspense>

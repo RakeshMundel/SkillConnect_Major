@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../Context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaUserTie, FaCalendarAlt, FaDollarSign } from 'react-icons/fa';
 import { BASE_URL } from '../config';
 
 const HiredProfessionals = () => {
     const { currentUser } = useContext(AuthContext);
+    const navigate = useNavigate();
     const [hiredList, setHiredList] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -59,9 +60,60 @@ const HiredProfessionals = () => {
                                 </div>
                                 <div>
                                     <h3 style={{ margin: 0 }}>{item.professionalName}</h3>
-                                    <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Hired Successfully</p>
+                                    <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
+                                        {item.status === 'fully_paid' ? '✅ Fully Paid' : '⏳ Deposit Paid (1/3)'}
+                                    </p>
                                 </div>
                             </div>
+                            
+                            {item.completionImage && (
+                                <div style={{ marginBottom: '15px', padding: '10px', background: '#f0fdf4', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
+                                    <p style={{ margin: '0 0 10px', color: '#16a34a', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        ✅ Work Completed (Proof below)
+                                    </p>
+                                    <img 
+                                        src={item.completionImage} 
+                                        alt="Work Proof" 
+                                        style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px' }} 
+                                    />
+                                </div>
+                            )}
+                            
+                            {item.status !== 'fully_paid' && (
+                                <button 
+                                    onClick={async () => {
+                                        try {
+                                            const response = await fetch(`${BASE_URL}/create-balance-checkout-session`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    hiringId: item._id,
+                                                    professionalName: item.professionalName,
+                                                    fullPrice: item.amount * 3 // Since amount stored was 1/3
+                                                })
+                                            });
+                                            const session = await response.json();
+                                            if (session.url) window.location.href = session.url;
+                                        } catch (error) {
+                                            alert("Payment failed");
+                                        }
+                                    }}
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '12px', 
+                                        background: item.completionImage ? '#28a745' : '#f59e0b', 
+                                        color: 'white', 
+                                        border: 'none', 
+                                        borderRadius: '8px', 
+                                        fontWeight: 'bold', 
+                                        marginBottom: '15px',
+                                        cursor: 'pointer',
+                                        boxShadow: item.completionImage ? '0 4px 12px rgba(40, 167, 69, 0.2)' : 'none'
+                                    }}
+                                >
+                                    {item.completionImage ? '💰 Pay Final Balance (2/3)' : '💰 Final Payment (Pay when work is done)'}
+                                </button>
+                            )}
                             <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '15px 0' }} />
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', color: '#555' }}>
@@ -77,18 +129,74 @@ const HiredProfessionals = () => {
                                     <span>Scheduled: {item.scheduledDate} at {item.scheduledTime}</span>
                                 </div>
                             </div>
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                                <button 
+                                    onClick={async (e) => {
+                                        e.preventDefault();
+                                        if (!item.professionalId) {
+                                            alert("Chat not available for this legacy record. Please hire a new professional to test chat!");
+                                            return;
+                                        }
+                                        try {
+                                            const { getOrCreateChat } = await import('../Components/Chat/getOrCreateChat');
+                                            const chatId = await getOrCreateChat(currentUser.uid, item.professionalId);
+                                            if (chatId) {
+                                                localStorage.setItem('activeChatId', chatId);
+                                                navigate('/chat', { state: { chatId } });
+                                            }
+                                        } catch (err) {
+                                            console.error(err);
+                                            alert("Failed to start chat. Please try again.");
+                                        }
+                                    }}
+                                    style={{ 
+                                        flex: 1, 
+                                        padding: '10px', 
+                                        background: '#0d6efd', 
+                                        color: 'white', 
+                                        border: 'none', 
+                                        borderRadius: '6px', 
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '5px',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    💬 Chat
+                                </button>
+                                <button 
+                                    onClick={() => window.location.href = `tel:${item.professionalPhone || "+919876543210"}`}
+                                    style={{ 
+                                        flex: 1, 
+                                        padding: '10px', 
+                                        background: '#28a745', 
+                                        color: 'white', 
+                                        border: 'none', 
+                                        borderRadius: '6px', 
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '5px',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    📞 Call
+                                </button>
+                            </div>
+
                             <Link 
                                 to={`/propage/${item.profileId}`} 
                                 style={{ 
                                     display: 'block', 
                                     textAlign: 'center', 
-                                    marginTop: '20px', 
-                                    padding: '10px', 
-                                    background: '#f8f9fa', 
-                                    color: '#0d6efd', 
+                                    marginTop: '10px', 
+                                    padding: '8px', 
+                                    color: '#666', 
                                     textDecoration: 'none', 
-                                    borderRadius: '6px',
-                                    fontWeight: 'bold'
+                                    fontSize: '13px'
                                 }}
                             >
                                 View Profile

@@ -5,6 +5,10 @@ const hiringSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    userName: {
+        type: String,
+        default: "Client"
+    },
     profileId: {
         type: String,
         required: true,
@@ -12,6 +16,14 @@ const hiringSchema = new mongoose.Schema({
     professionalName: {
         type: String,
         required: true,
+    },
+    professionalId: {
+        type: String,
+        required: true,
+    },
+    professionalPhone: {
+        type: String,
+        default: ""
     },
     hiredAt: {
         type: Date,
@@ -28,6 +40,18 @@ const hiringSchema = new mongoose.Schema({
     scheduledTime: {
         type: String,
         required: true,
+    },
+    status: {
+        type: String,
+        enum: ["deposit_paid", "fully_paid"],
+        default: "deposit_paid"
+    },
+    completionImage: {
+        type: String,
+        default: ""
+    },
+    completedAt: {
+        type: Date
     }
 });
 

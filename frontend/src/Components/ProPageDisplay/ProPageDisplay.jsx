@@ -60,6 +60,7 @@ const ProPageDisplay = (props) => {
             currentUser.uid,
             profile.owner
         );
+        localStorage.setItem('activeChatId', chatId);
         navigate("/chat", { state: { chatId } });
     };
 
@@ -95,6 +96,9 @@ const ProPageDisplay = (props) => {
                     name: profile.name,
                     price: profile.price || 50,
                     userId: currentUser.uid,
+                    userName: currentUser.displayName || "Client",
+                    professionalId: profile.owner,
+                    phone: profile.phone,
                     scheduledDate,
                     scheduledTime
                 })
@@ -218,7 +222,7 @@ const callNow = () => {
   </>
 ) : (
   <>
-    <button className="book-service-btn" onClick={() => window.location.href = "tel:+919876543210"}>
+    <button className="book-service-btn" onClick={() => window.location.href = `tel:${profile.phone || "+919876543210"}`}>
   📞 Call Now
   </button>
 
@@ -228,7 +232,7 @@ const callNow = () => {
       style={{ background: "#0d6efd", marginTop: "10px" }}
       onClick={startChat}
     >
-      Chat with Professional
+      💬 Chat with Professional
     </button>
 
     {!isHired && (
@@ -272,7 +276,7 @@ const callNow = () => {
       }}
       disabled={isHired}
     >
-      {isHired ? "✅ Already Hired" : "🚀 Hire Now"}
+      {isHired ? "✅ Already Hired" : `🚀 Hire Now (Pay 1/3 Deposit: $${Math.ceil((profile.price || 50) / 3)})`}
     </button>
   </>
 )}
