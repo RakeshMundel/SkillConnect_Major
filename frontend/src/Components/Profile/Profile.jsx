@@ -55,7 +55,14 @@ const Profile = (props) => {
       }
     }}>
         <div className="item-top">
-          <img src={props.image.startsWith('http') ? props.image : `${BASE_URL}${props.image}`} alt={props.name}></img>
+          <img 
+            src={props.image.startsWith('http') ? props.image : `${BASE_URL}${props.image}`} 
+            alt={props.name}
+            onError={(e) => {
+              e.target.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; // Default avatar
+              e.target.onerror = null; // Prevent infinite loops
+            }}
+          />
           <div className="item-main">
             <p>{props.name}</p>
             <div className="item-rating">

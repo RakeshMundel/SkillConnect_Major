@@ -28,6 +28,26 @@ const HiredProfessionals = () => {
         fetchHired();
     }, [currentUser]);
 
+    if (!currentUser) {
+        return (
+            <div style={{ textAlign: 'center', padding: '100px 20px', minHeight: '60vh' }}>
+                <FaUserTie style={{ fontSize: '60px', color: '#ccc', marginBottom: '20px' }} />
+                <h2>Please Log In to View Your Hired List</h2>
+                <p style={{ color: '#666', marginBottom: '20px' }}>You need to be logged in to track your hired professionals and payments.</p>
+                <Link to="/login" style={{ 
+                    padding: '12px 30px', 
+                    background: '#0d6efd', 
+                    color: 'white', 
+                    borderRadius: '8px', 
+                    textDecoration: 'none',
+                    fontWeight: 'bold'
+                }}>
+                    Go to Login
+                </Link>
+            </div>
+        );
+    }
+
     if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Loading...</div>;
 
     return (
