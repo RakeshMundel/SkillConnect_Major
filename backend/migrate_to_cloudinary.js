@@ -21,11 +21,17 @@ async function migrate() {
 
     // 1. Migrate Profiles
     console.log("\n--- Checking Profiles ---");
-    const profiles = await Profile.find({ image: { $regex: /^\/images\// } });
-    console.log(`Found ${profiles.length} profiles with local images.`);
+    // Find profiles where image has "localhost" or starts with "/images/"
+    const profiles = await Profile.find({ 
+      $or: [
+        { image: { $regex: /localhost:4000\/images\// } },
+        { image: { $regex: /^\/images\// } }
+      ]
+    });
+    console.log(`Found ${profiles.length} profiles with local/localhost images.`);
 
     for (const profile of profiles) {
-      const fileName = profile.image.replace("/images/", "");
+      const fileName = profile.image.split("/").pop(); // Get just the filename
       const filePath = path.join(__dirname, "upload", "images", fileName);
 
       if (fs.existsSync(filePath)) {
@@ -44,11 +50,16 @@ async function migrate() {
 
     // 2. Migrate Hirings (Work Proofs)
     console.log("\n--- Checking Work Proofs ---");
-    const hirings = await Hiring.find({ completionImage: { $regex: /^\/images\// } });
-    console.log(`Found ${hirings.length} hirings with local images.`);
+    const hirings = await Hiring.find({ 
+      $or: [
+        { completionImage: { $regex: /localhost:4000\/images\// } },
+        { completionImage: { $regex: /^\/images\// } }
+      ]
+    });
+    console.log(`Found ${hirings.length} hirings with local/localhost images.`);
 
     for (const hiring of hirings) {
-      const fileName = hiring.completionImage.replace("/images/", "");
+      const fileName = hiring.completionImage.split("/").pop(); // Get just the filename
       const filePath = path.join(__dirname, "upload", "images", fileName);
 
       if (fs.existsSync(filePath)) {
