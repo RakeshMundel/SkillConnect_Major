@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import Profile from "../Components/Profile/Profile";
+import { BASE_URL } from "../config";
 
 const SearchResults = () => {
   const [results, setResults] = useState([]);
@@ -11,7 +12,7 @@ const SearchResults = () => {
   useEffect(() => {
     if (!query) return;
 
-    fetch(`/search?query=${query}`)
+    fetch(`${BASE_URL}/search?query=${query}`)
       .then(res => res.json())
       .then(data => setResults(data));
   }, [query]);
