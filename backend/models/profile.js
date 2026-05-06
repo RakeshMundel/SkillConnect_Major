@@ -73,10 +73,24 @@ certificate: {
   type: String,
   default: ""
 },
-rating: {
-  type: Number,
-  default: 5
-},
+  rating: {
+    type: Number,
+    default: 5
+  },
+  price: {
+    type: Number,
+    default: 50 // Default hiring fee $50
+  },
+    membership: {
+        type: String,
+        enum: ["Basic", "Pro"],
+        default: "Basic"
+    },
+    earnings: {
+        type: Number,
+        default: 0
+    }
+,
 
   createdAt: {
     type: Date,

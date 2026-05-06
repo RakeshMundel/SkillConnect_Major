@@ -1,11 +1,24 @@
 // src/components/TrustSection.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { FaStar } from "react-icons/fa";
 import ig1 from '../Assets/ig1.jpg'
 import ig2 from '../Assets/ig2.jpg'
 import ig3 from '../Assets/ig3.jpg'
 import ig4 from '../Assets/ig4.jpg'
-import './TrustSection.css'; 
+import './TrustSection.css';
+
+const CountUp = ({ to, duration = 2 }) => {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => Math.round(latest).toLocaleString());
+
+  useEffect(() => {
+    const controls = animate(count, to, { duration });
+    return controls.stop;
+  }, [to]);
+
+  return <motion.span>{rounded}</motion.span>;
+};
 
 const TrustSection = () => {
   const professionals = [
@@ -23,8 +36,12 @@ const TrustSection = () => {
           <FaStar className="trust-section-star" />
           <strong className="trust-section-rating">4.9/5 Stars</strong>
           <span className="trust-section-customer-count">
-            1,000,000+ Happy Customers
+            Join <CountUp to={1000000} />+ Happy Customers
           </span>
+        </div>
+        <div className="trust-section-benefits" style={{ marginTop: '10px' }}>
+          <h4 style={{ color: 'white', fontSize: '1.1rem' }}>No Intermediary - Pay Only for Services</h4>
+          <h4 style={{ color: 'white', fontSize: '1.1rem' }}>100% Secure Payments through Stripe</h4>
         </div>
       </div>
 
@@ -37,7 +54,6 @@ const TrustSection = () => {
         ))}
       </div>
     </section>
-      
   );
 };
 

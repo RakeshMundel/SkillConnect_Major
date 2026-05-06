@@ -7,8 +7,6 @@ export const testFirestore = async () => {
       message: "Firestore connected successfully",
       createdAt: Timestamp.now()
     });
-    console.log("🔥 Firestore working");
   } catch (err) {
-    console.error("❌ Firestore error", err);
   }
 };

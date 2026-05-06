@@ -1,6 +1,7 @@
-import React, { useContext } from 'react'
+import React, { useContext, memo } from 'react'
 import './Profile.css'
 import { Link, useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../../config.js';
 import { FaPhoneAlt, FaStar, FaMapMarkerAlt, FaCommentDots, FaCheckCircle } from "react-icons/fa";
 import { AuthContext } from "../../Context/AuthContext";
 import { getOrCreateChat } from "../Chat/getOrCreateChat";
@@ -54,7 +55,14 @@ const Profile = (props) => {
       }
     }}>
         <div className="item-top">
-          <img src={props.image} alt={props.name}></img>
+          <img 
+            src={props.image.startsWith('http') ? props.image : `${BASE_URL}${props.image}`} 
+            alt={props.name}
+            onError={(e) => {
+              e.target.src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; // Default avatar
+              e.target.onerror = null; // Prevent infinite loops
+            }}
+          />
           <div className="item-main">
             <p>{props.name}</p>
             <div className="item-rating">
@@ -86,4 +94,4 @@ const Profile = (props) => {
   )
 }
 
-export default  Profile
+export default memo(Profile)

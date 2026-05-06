@@ -17,7 +17,6 @@ import {
   getDoc,
   getDocs,
 } from "firebase/firestore";
-import { FiMoreVertical, FiPhone, FiSend } from "react-icons/fi";
 import { sendMessage } from "./sendMessage";
 import "./Chat.css";
 
@@ -32,13 +31,15 @@ const Chat = ({ chatId }) => {
   const bottomRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
-  if (loading) return <h3 className="chat-state">Loading...</h3>;
-  if (!currentUser) return <h3 className="chat-state">Please login to use chat</h3>;
+  if (loading) return <h3>Loading...</h3>;
+  if (!currentUser) return <h3>Please login to use chat</h3>;
 
+  /* 🔽 Auto-scroll */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  /* 🔽 Listen to typing status */
   useEffect(() => {
     if (!chatId || !currentUser) return;
 
@@ -47,7 +48,8 @@ const Chat = ({ chatId }) => {
 
       const typingData = snap.data().typing || {};
       const isOtherTyping = Object.entries(typingData).some(
-        ([uid, isTyping]) => uid !== currentUser.uid && isTyping
+        ([uid, isTyping]) =>
+          uid !== currentUser.uid && isTyping
       );
 
       setTypingUser(isOtherTyping);
@@ -56,6 +58,7 @@ const Chat = ({ chatId }) => {
     return () => unsub();
   }, [chatId, currentUser]);
 
+  /* 🔽 Listen to messages */
   useEffect(() => {
     if (!chatId) return;
 
@@ -65,9 +68,9 @@ const Chat = ({ chatId }) => {
     );
 
     const unsub = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map((messageDoc) => ({
-        id: messageDoc.id,
-        ...messageDoc.data(),
+      const msgs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
       }));
       setMessages(msgs);
     });
@@ -75,6 +78,7 @@ const Chat = ({ chatId }) => {
     return () => unsub();
   }, [chatId]);
 
+  /* 🔽 Mark messages as seen */
   useEffect(() => {
     if (!chatId || !currentUser) return;
 
@@ -88,15 +92,17 @@ const Chat = ({ chatId }) => {
       const snap = await getDocs(q);
 
       snap.forEach((docSnap) => {
-        updateDoc(doc(db, "chats", chatId, "messages", docSnap.id), {
-          seen: true,
-        });
+        updateDoc(
+          doc(db, "chats", chatId, "messages", docSnap.id),
+          { seen: true }
+        );
       });
     };
 
     markSeen();
   }, [chatId, currentUser]);
 
+  /* 🔽 Fetch chat user */
   useEffect(() => {
     if (!chatId || !currentUser) return;
 
@@ -108,7 +114,9 @@ const Chat = ({ chatId }) => {
         .data()
         .members.find((id) => id !== currentUser.uid);
 
-      const userSnap = await getDoc(doc(db, "users", otherUserId));
+      const userSnap = await getDoc(
+        doc(db, "users", otherUserId)
+      );
 
       if (userSnap.exists()) {
         setChatUser(userSnap.data());
@@ -118,6 +126,7 @@ const Chat = ({ chatId }) => {
     fetchUser();
   }, [chatId, currentUser]);
 
+  /* 🔽 Typing handler (DEBOUNCED) */
   const handleTyping = async (value) => {
     setText(value);
 
@@ -136,6 +145,7 @@ const Chat = ({ chatId }) => {
     }, 400);
   };
 
+  /* 🔽 Send message */
   const handleSend = async () => {
     if (!text.trim()) return;
 
@@ -149,60 +159,44 @@ const Chat = ({ chatId }) => {
   };
 
   return (
-    <section className="chat-container">
+    <div className="chat-container">
+      {/* HEADER */}
       <div className="chat-header">
-        <div className="chat-header-main">
-          <div className="chat-avatar-shell">
-            {chatUser?.photoURL ? (
-              <img
-                src={chatUser.photoURL}
-                alt={chatUser?.name || "User"}
-                className="chat-avatar-image"
-              />
-            ) : (
-              <span>{(chatUser?.name || "C").charAt(0).toUpperCase()}</span>
-            )}
-          </div>
-
-          <div className="chat-header-text">
-            <h3>{chatUser?.name || "Chat"}</h3>
-            <p>{typingUser ? "Typing..." : "Professional support chat"}</p>
-          </div>
-        </div>
-
-        <div className="chat-header-actions">
-          <button type="button" className="chat-icon-button" aria-label="Call">
-            <FiPhone />
-          </button>
-          <button type="button" className="chat-icon-button" aria-label="More options">
-            <FiMoreVertical />
-          </button>
-        </div>
+        {chatUser?.name || "Chat"}
       </div>
 
+      {/* TYPING INDICATOR */}
       {typingUser && (
-        <p className="chat-typing-indicator">The professional is typing...</p>
+        <p
+          style={{
+            fontSize: "12px",
+            color: "gray",
+            marginLeft: "10px",
+          }}
+        >
+          Typing...
+        </p>
       )}
 
+      {/* MESSAGES */}
       <div className="chat-messages">
-        {messages.length === 0 && (
-          <div className="chat-empty-state">
-            <h4>No messages yet</h4>
-            <p>Start the conversation and discuss your service needs.</p>
-          </div>
-        )}
+        {messages.length === 0 && <p>No messages yet</p>}
 
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={`message ${
-              msg.senderId === currentUser.uid ? "sent" : "received"
+              msg.senderId === currentUser.uid
+                ? "sent"
+                : "received"
             }`}
           >
-            <div className="message-content">{msg.text}</div>
+            {msg.text}
 
             {msg.senderId === currentUser.uid && (
-              <div className="message-status">{msg.seen ? "Seen" : "Delivered"}</div>
+              <div style={{ fontSize: "10px", color: "#ccc" }}>
+                {msg.seen ? "✔✔ Seen" : "✔ Delivered"}
+              </div>
             )}
           </div>
         ))}
@@ -210,6 +204,7 @@ const Chat = ({ chatId }) => {
         <div ref={bottomRef} />
       </div>
 
+      {/* INPUT */}
       <div className="chat-input">
         <input
           value={text}
@@ -219,13 +214,11 @@ const Chat = ({ chatId }) => {
               handleSend();
             }
           }}
-          placeholder="Type your message here..."
+          placeholder="Type a message..."
         />
-        <button onClick={handleSend} aria-label="Send message">
-          <FiSend />
-        </button>
+        <button onClick={handleSend}>Send</button>
       </div>
-    </section>
+    </div>
   );
 };
 
