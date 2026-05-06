@@ -71,6 +71,17 @@ const MyBookings = () => {
 
     if (loading) return <div className="bookings-loading">Loading your bookings...</div>;
 
+    const isExpired = (booking) => {
+        try {
+            const [hours, minutes] = (booking.scheduledTime || '23:59').split(':').map(Number);
+            const scheduled = new Date(booking.scheduledDate);
+            scheduled.setHours(hours, minutes, 0, 0);
+            return new Date() > scheduled;
+        } catch {
+            return false;
+        }
+    };
+
     return (
         <div className="my-bookings-container">
             <div className="bookings-header">
@@ -86,15 +97,17 @@ const MyBookings = () => {
                 </div>
             ) : (
                 <div className="bookings-grid">
-                    {bookings.map((booking) => (
-                        <div key={booking._id} className="booking-card">
+                    {bookings.map((booking) => {
+                        const expired = isExpired(booking);
+                        return (
+                        <div key={booking._id} className="booking-card" style={expired ? { opacity: 0.75, background: '#f9fafb' } : {}}>
                             <div className="booking-card-header">
                                 <div className="client-info">
                                     <FaUser className="client-icon" />
                                     <div>
                                         <h3>Client: {booking.userName || "Client"}</h3>
-                                        <span className={`status-badge ${booking.completionImage ? 'completed' : 'pending'}`}>
-                                            {booking.completionImage ? 'Completed' : 'Active Job'}
+                                        <span className={`status-badge ${booking.completionImage ? 'completed' : expired ? 'expired' : 'pending'}`}>
+                                            {booking.completionImage ? 'Completed' : expired ? 'Booking Expired' : 'Active Job'}
                                         </span>
                                     </div>
                                 </div>
@@ -106,7 +119,9 @@ const MyBookings = () => {
                             <div className="booking-details">
                                 <div className="detail-item">
                                     <FaCalendarCheck />
-                                    <span>Scheduled: {booking.scheduledDate} at {booking.scheduledTime}</span>
+                                    <span style={expired ? { color: '#ef4444' } : {}}>
+                                        {expired ? '⏰ Was scheduled:' : 'Scheduled:'} {booking.scheduledDate} at {booking.scheduledTime}
+                                    </span>
                                 </div>
                                 <div className="detail-item">
                                     <FaCheckCircle />
@@ -119,6 +134,12 @@ const MyBookings = () => {
                                     <div className="completion-proof">
                                         <p>✅ Work Completed</p>
                                         <img src={booking.completionImage} alt="Completion Proof" className="proof-img" />
+                                    </div>
+                                ) : expired ? (
+                                    <div className="complete-task-zone" style={{ opacity: 0.6 }}>
+                                        <div className="upload-label" style={{ cursor: 'not-allowed', background: '#9ca3af' }}>
+                                            🔒 Upload Locked (Booking Expired)
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="complete-task-zone">
@@ -151,7 +172,8 @@ const MyBookings = () => {
                                 </button>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>

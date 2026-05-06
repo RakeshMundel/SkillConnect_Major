@@ -50,6 +50,17 @@ const HiredProfessionals = () => {
 
     if (loading) return <div style={{ textAlign: 'center', padding: '50px' }}>Loading...</div>;
 
+    const isExpired = (item) => {
+        try {
+            const [hours, minutes] = (item.scheduledTime || '23:59').split(':').map(Number);
+            const scheduled = new Date(item.scheduledDate);
+            scheduled.setHours(hours, minutes, 0, 0);
+            return new Date() > scheduled;
+        } catch {
+            return false;
+        }
+    };
+
     return (
         <div style={{ padding: '40px 10%', minHeight: '80vh' }}>
             <h1 style={{ marginBottom: '30px', color: '#333' }}>Your Hired Professionals</h1>
@@ -61,13 +72,16 @@ const HiredProfessionals = () => {
                 </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-                    {hiredList.map((item) => (
+                    {hiredList.map((item) => {
+                        const expired = isExpired(item);
+                        return (
                         <div key={item._id} style={{ 
                             border: '1px solid #ddd', 
                             borderRadius: '12px', 
                             padding: '20px', 
                             boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                            background: 'white'
+                            background: expired ? '#f9fafb' : 'white',
+                            opacity: expired && item.status !== 'fully_paid' ? 0.75 : 1
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
                                 <div style={{ 
@@ -81,7 +95,7 @@ const HiredProfessionals = () => {
                                 <div>
                                     <h3 style={{ margin: 0 }}>{item.professionalName}</h3>
                                     <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-                                        {item.status === 'fully_paid' ? '✅ Fully Paid' : '⏳ Deposit Paid (1/3)'}
+                                        {item.status === 'fully_paid' ? '✅ Fully Paid' : expired ? '⌛ Booking Expired' : '⏳ Deposit Paid (1/3)'}
                                     </p>
                                 </div>
                             </div>
@@ -101,7 +115,9 @@ const HiredProfessionals = () => {
                             
                             {item.status !== 'fully_paid' && (
                                 <button 
+                                    disabled={expired}
                                     onClick={async () => {
+                                        if (expired) return;
                                         try {
                                             const response = await fetch(`${BASE_URL}/create-balance-checkout-session`, {
                                                 method: 'POST',
@@ -121,17 +137,17 @@ const HiredProfessionals = () => {
                                     style={{ 
                                         width: '100%', 
                                         padding: '12px', 
-                                        background: item.completionImage ? '#28a745' : '#f59e0b', 
+                                        background: expired ? '#9ca3af' : item.completionImage ? '#28a745' : '#f59e0b', 
                                         color: 'white', 
                                         border: 'none', 
                                         borderRadius: '8px', 
                                         fontWeight: 'bold', 
                                         marginBottom: '15px',
-                                        cursor: 'pointer',
-                                        boxShadow: item.completionImage ? '0 4px 12px rgba(40, 167, 69, 0.2)' : 'none'
+                                        cursor: expired ? 'not-allowed' : 'pointer',
+                                        boxShadow: !expired && item.completionImage ? '0 4px 12px rgba(40, 167, 69, 0.2)' : 'none'
                                     }}
                                 >
-                                    {item.completionImage ? '💰 Pay Final Balance (2/3)' : '💰 Final Payment (Pay when work is done)'}
+                                    {expired ? '🔒 Payment Locked (Booking Expired)' : item.completionImage ? '💰 Pay Final Balance (2/3)' : '💰 Final Payment (Pay when work is done)'}
                                 </button>
                             )}
                             <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '15px 0' }} />
@@ -144,9 +160,9 @@ const HiredProfessionals = () => {
                                     <FaDollarSign style={{ marginRight: '10px' }} />
                                     <span>Hiring Fee: ${item.amount}</span>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', color: '#28a745', fontWeight: 'bold' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', color: expired ? '#ef4444' : '#28a745', fontWeight: 'bold' }}>
                                     <FaCalendarAlt style={{ marginRight: '10px' }} />
-                                    <span>Scheduled: {item.scheduledDate} at {item.scheduledTime}</span>
+                                    <span>{expired ? '⏰ Was scheduled:' : 'Scheduled:'} {item.scheduledDate} at {item.scheduledTime}</span>
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
@@ -222,7 +238,8 @@ const HiredProfessionals = () => {
                                 View Profile
                             </Link>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>

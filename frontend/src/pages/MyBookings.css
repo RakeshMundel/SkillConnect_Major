@@ -82,6 +82,11 @@
     color: #155724;
 }
 
+.status-badge.expired {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
 .booking-price {
     text-align: right;
     font-size: 20px;
